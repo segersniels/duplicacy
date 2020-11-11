@@ -7,6 +7,7 @@ interface Options {
   log?: boolean;
   threads?: number;
   stats?: boolean;
+  ['dry-run']?: boolean;
 }
 
 export default class Duplicacy {

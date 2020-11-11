@@ -38,6 +38,7 @@ lockfile.run(async () => {
     )
     .option('-t, --threads <number>', 'Number of uploading threads')
     .option('-s, --stats', 'Show statistics during and after backup')
+    .option('--dry-run', "Dry run for testing, don't backup anything")
     .parse(process.argv);
 
   if (!program.repository) {
@@ -63,5 +64,6 @@ lockfile.run(async () => {
     log: program.log ?? true,
     threads: program.threads ?? 2,
     stats: program.stats ?? true,
+    ['dry-run']: program.dryRun ?? false,
   });
 });
