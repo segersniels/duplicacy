@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 
 import fs from 'fs';
-import Lockfile from 'helpers/lockfile';
 import which from 'which';
 import Duplicacy from 'helpers/duplicacy';
 import * as utils from 'helpers/utils';
 import { program } from 'commander';
 import packageJson from 'package';
+import lockfile from 'lockfile';
 
-const lockfile = new Lockfile(__filename);
+const filename = `${__filename}.lock`;
 const duplicacy = new Duplicacy();
 
-lockfile.run(async () => {
+/**
+ * Lock the file for 5 minutes
+ */
+lockfile.lock(filename, { wait: 1000 * 60 * 5 }, (err) => {
+  if (err) {
+    utils.error(
+      'Tried to get the lock on the binary but the previous instance has been running for over 5 minutes, not trying again...',
+    );
+  }
+
   program
     .name('backup')
     .version(packageJson.version)
@@ -45,22 +54,32 @@ lockfile.run(async () => {
   /**
    * Create the post-backup script and make it executable
    */
-  await fs.promises.mkdir(`${program.repository}/.duplicacy/scripts`, {
+  fs.mkdirSync(`${program.repository}/.duplicacy/scripts`, {
     recursive: true,
   });
-  await fs.promises.writeFile(
+  fs.writeFileSync(
     `${program.repository}/.duplicacy/scripts/post-backup`,
     `#!/bin/sh\n${path} prune -keep 0:${program.pruneDays ?? 1}`,
   );
-  await fs.promises.chmod(
-    `${program.repository}/.duplicacy/scripts/post-backup`,
-    '755',
-  );
+  fs.chmodSync(`${program.repository}/.duplicacy/scripts/post-backup`, '755');
 
-  await duplicacy.backup(program.repository, {
-    log: program.log ?? true,
-    threads: program.threads ?? 2,
-    stats: program.stats ?? true,
-    ['dry-run']: program.dryRun ?? false,
-  });
+  duplicacy.backup(
+    program.repository,
+    {
+      log: program.log ?? true,
+      threads: program.threads ?? 2,
+      stats: program.stats ?? true,
+      ['dry-run']: program.dryRun ?? false,
+    },
+    () => {
+      /**
+       * Unlock the file after backup has been completed
+       */
+      lockfile.unlock(filename, (err) => {
+        if (err) {
+          utils.error(err.message);
+        }
+      });
+    },
+  );
 });

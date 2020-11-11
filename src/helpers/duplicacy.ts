@@ -44,7 +44,11 @@ export default class Duplicacy {
     };
   };
 
-  public backup = (repository: string, options: Options = {}) => {
+  public backup = (
+    repository: string,
+    options: Options = {},
+    fn: () => void,
+  ) => {
     if (!this._path) {
       console.error('[ERROR] Duplicacy is not installed');
       process.exit();
@@ -58,5 +62,7 @@ export default class Duplicacy {
     ls.stdout.on('data', function (data) {
       console.log(data.toString());
     });
+
+    ls.on('close', fn);
   };
 }
