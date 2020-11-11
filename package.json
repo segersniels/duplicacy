@@ -22,7 +22,6 @@
     "eslint": "^7.13.0",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "minimist": "^1.2.5",
     "pkg": "^4.4.9",
     "prettier": "^2.1.2",
     "proper-lockfile": "^4.1.1",
