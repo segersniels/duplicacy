@@ -53,7 +53,7 @@ lockfile.run(async () => {
   });
   await fs.promises.writeFile(
     `${program.repository}/.duplicacy/scripts/post-backup`,
-    `#!/bin/sh\n${path} prune -keep 0:${program.pruneDays}`,
+    `#!/bin/sh\n${path} prune -keep 0:${program.pruneDays ?? 1}`,
   );
   await fs.promises.chmod(
     `${program.repository}/.duplicacy/scripts/post-backup`,
