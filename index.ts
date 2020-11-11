@@ -11,18 +11,6 @@ import packageJson from 'package';
 const lockfile = new Lockfile(__filename);
 const duplicacy = new Duplicacy();
 
-/**
- * Do basic checks to see if we need to run at all
- */
-const path = which.sync('duplicacy', { nothrow: true });
-
-if (!path) {
-  utils.error('Duplicacy is not installed');
-}
-
-/**
- * Good to go, run a locked backup
- */
 lockfile.run(async () => {
   program
     .name('backup')
@@ -40,6 +28,15 @@ lockfile.run(async () => {
     .option('-s, --stats', 'Show statistics during and after backup')
     .option('--dry-run', "Dry run for testing, don't backup anything")
     .parse(process.argv);
+
+  /**
+   * Do basic checks to see if we need to run at all
+   */
+  const path = which.sync('duplicacy', { nothrow: true });
+
+  if (!path) {
+    utils.error('Duplicacy is not installed');
+  }
 
   if (!program.repository) {
     utils.error('No repository path provided to --repository flag');
