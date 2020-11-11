@@ -11,32 +11,30 @@ import lockfile from 'lockfile';
 const filename = `${__filename}.lock`;
 const duplicacy = new Duplicacy();
 
+program
+  .name('backup')
+  .version(packageJson.version)
+  .option(
+    '-r, --repository <path>',
+    'Path to the duplicacy repository you wish to back up',
+  )
+  .option('-l, --log', 'Enable log-style output')
+  .option(
+    '--prune-days <number>',
+    'Amount of days to keep backed up, snapshots falling outside the amount of days provided will be deleted',
+  )
+  .option('-t, --threads <number>', 'Number of uploading threads')
+  .option('-s, --stats', 'Show statistics during and after backup')
+  .option('--dry-run', "Dry run for testing, don't backup anything")
+  .parse(process.argv);
+
 /**
  * Lock the file for 5 minutes
  */
 lockfile.lock(filename, { wait: 1000 * 60 * 5 }, (err) => {
   if (err) {
-    utils.error(
-      'Tried to get the lock on the binary but the previous instance has been running for over 5 minutes, not trying again...',
-    );
+    utils.error(err.message);
   }
-
-  program
-    .name('backup')
-    .version(packageJson.version)
-    .option(
-      '-r, --repository <path>',
-      'Path to the duplicacy repository you wish to back up',
-    )
-    .option('-l, --log', 'Enable log-style output')
-    .option(
-      '--prune-days <number>',
-      'Amount of days to keep backed up, snapshots falling outside the amount of days provided will be deleted',
-    )
-    .option('-t, --threads <number>', 'Number of uploading threads')
-    .option('-s, --stats', 'Show statistics during and after backup')
-    .option('--dry-run', "Dry run for testing, don't backup anything")
-    .parse(process.argv);
 
   /**
    * Do basic checks to see if we need to run at all
