@@ -25,6 +25,7 @@ program
   .option('-t, --threads <number>', 'Number of uploading threads')
   .option('-s, --stats', 'Show statistics during and after backup')
   .option('--dry-run', "Dry run for testing, don't backup anything")
+  .option('--wait <minutes>', 'Time in minutes to wait on lock to go away')
   .parse(process.argv);
 
 if (!program.repository) {
@@ -36,7 +37,7 @@ if (!program.repository) {
  */
 lockfile.lock(
   `${program.repository}/.duplicacy/.lock`,
-  { wait: 1000 * 60 * 5 },
+  { wait: 1000 * 60 * (program.wait ?? 5) },
   (err) => {
     if (err) {
       utils.error(err.message);

@@ -19,7 +19,7 @@ Options:
   -t, --threads <number>   Number of uploading threads
   -s, --stats              Show statistics during and after backup
   --dry-run                Dry run for testing, don't backup anything
-  --retry <minutes>        Time in minutes to wait on lock to go away
+  --wait <minutes>         Time in minutes to wait on lock to go away
   -h, --help               display help for command
 ```
 
@@ -34,7 +34,7 @@ And use it in a cronjob like such (note that the duplicacy binary is named `back
 
 I've read mixed things about running multiple `duplicacy backup`'s at the same time causing performance or weird issues so I decided to place a lock on the binary until the backup completes.
 
-This means that you can't run two parallel instances of a backup at the same time. When a lock is placed on the binary the second execution will wait on the first execution to complete before starting. This ensures your cron jobs don't interfere with each other when one takes longer than usual. The current wait time is 5 minutes so system resources don't get put aside for too long.
+This means that you can't run two parallel instances of a backup at the same time. When a lock is placed on the binary the second execution will wait on the first execution to complete before starting. This ensures your cron jobs don't interfere with each other when one takes longer than usual. The default wait time is 5 minutes so system resources don't get put aside for too long.
 
 ## Note
 
