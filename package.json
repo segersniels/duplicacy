@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "yarn compile ; pkg dist/index.js --target node12 -o ./bin/backup",
-    "build:ci": "yarn compile ; pkg dist/index.js --targets node12-linux-x64,node12-macos-x64,node12-win-x64 --out-path ./bin",
+    "build:ci": "yarn compile ; pkg dist/index.js --targets node12-linux-x64,node12-macos-x64 --out-path ./bin",
     "compile": "ncc build index.ts -m -o dist",
     "lint": "eslint '**/*.{ts,tsx}'",
     "lint:fix": "eslint '**/*.{ts,tsx}' --fix",
