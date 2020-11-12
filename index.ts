@@ -8,8 +8,6 @@ import { program } from 'commander';
 import packageJson from 'package';
 import lockfile from 'lockfile';
 
-const duplicacy = new Duplicacy();
-
 program
   .name('backup')
   .version(packageJson.version)
@@ -26,6 +24,10 @@ program
   .option('-s, --stats', 'Show statistics during and after backup')
   .option('--dry-run', "Dry run for testing, don't backup anything")
   .option('--wait <minutes>', 'Time in minutes to wait on lock to go away')
+  .option(
+    '--bin <path>',
+    'If needed you can point to your duplicacy binary manually',
+  )
   .parse(process.argv);
 
 if (!program.repository) {
@@ -46,11 +48,11 @@ lockfile.lock(
     /**
      * Do basic checks to see if we need to run at all
      */
-    const path = which.sync('duplicacy', { nothrow: true });
-
-    if (!path) {
-      utils.error('Duplicacy is not installed');
-    }
+    const path =
+      which.sync('duplicacy', { nothrow: true }) ??
+      program.bin ??
+      '/usr/local/bin/duplicacy';
+    const duplicacy = new Duplicacy(path);
 
     /**
      * Create the post-backup script and make it executable

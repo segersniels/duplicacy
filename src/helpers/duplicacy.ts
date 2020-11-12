@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import which from 'which';
 
 const GLOBAL_OPTIONS = ['log'];
 
@@ -13,8 +12,8 @@ interface Options {
 export default class Duplicacy {
   _path: string | null;
 
-  constructor() {
-    this._path = which.sync('duplicacy', { nothrow: true });
+  constructor(path: string) {
+    this._path = path;
   }
 
   private getFlagsFromOptions = (options: Options) => {
