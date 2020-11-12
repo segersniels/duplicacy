@@ -20,6 +20,7 @@ Options:
   -s, --stats              Show statistics during and after backup
   --dry-run                Dry run for testing, don't backup anything
   --wait <minutes>         Time in minutes to wait on lock to go away
+  --bin <path>             If needed you can point to your duplicacy binary manually
   -h, --help               display help for command
 ```
 
@@ -53,3 +54,7 @@ Default set to `2` threads.
 #### `--prune-days`
 
 Default set to `1` day.
+
+#### `--bin`
+
+The tool tries to determine the path of the installed `duplicacy` path on your system. But in some environments `which` will not be able to automatically figure out where your `duplicacy` binary is located. So in those cases you are able to manually set the binary path using the `--bin` flag. Default path set to `/usr/local/bin/duplicacy` if `which` is not able to determine the path itself.
