@@ -30,6 +30,11 @@ export default class Duplicacy {
         continue;
       }
 
+      // Don't append boolean flags that are set to false
+      if (!value) {
+        continue;
+      }
+
       flags.push(`-${key}`);
 
       // Only add the value when not a boolean flag
