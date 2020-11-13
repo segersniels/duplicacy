@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import Debug from 'helpers/debug';
 
 const GLOBAL_OPTIONS = ['log'];
 
@@ -11,9 +12,11 @@ interface Options {
 
 export default class Duplicacy {
   _path: string | null;
+  _debug: Debug;
 
-  constructor(path: string) {
+  constructor(path: string, debug: Debug) {
     this._path = path;
+    this._debug = debug;
   }
 
   private getFlagsFromOptions = (options: Options) => {
@@ -37,6 +40,10 @@ export default class Duplicacy {
       flags.push(`${value}`);
     }
 
+    this._debug.log(
+      `Extracted flags from config: ${JSON.stringify({ flags, global })}`,
+    );
+
     return {
       flags,
       global,
@@ -54,6 +61,15 @@ export default class Duplicacy {
     }
 
     const { global, flags } = this.getFlagsFromOptions(options);
+
+    this._debug.log(
+      `Spawning command in working directory ${repository}: ${this._path} ${[
+        ...global,
+        'backup',
+        ...flags,
+      ].join(' ')}`,
+    );
+
     const ls = spawn(this._path, [...global, 'backup', ...flags], {
       cwd: repository,
     });

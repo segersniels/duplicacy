@@ -7,6 +7,7 @@ import * as utils from 'helpers/utils';
 import { program } from 'commander';
 import packageJson from 'package';
 import lockfile from 'lockfile';
+import Debug from 'helpers/debug';
 
 program
   .name('backup')
@@ -28,11 +29,14 @@ program
     '--bin <path>',
     'If needed you can point to your duplicacy binary manually',
   )
+  .option('--debug', 'Enable to output basic debugging statements')
   .parse(process.argv);
 
 if (!program.repository) {
   utils.error('No repository path provided to --repository flag');
 }
+
+const debug = new Debug(program.debug);
 
 /**
  * Lock the file for 5 minutes
@@ -45,14 +49,15 @@ lockfile.lock(
       utils.error(err.message);
     }
 
-    /**
-     * Do basic checks to see if we need to run at all
-     */
+    debug.log('Successfully acquired lock on lockfile');
+
     const path =
       which.sync('duplicacy', { nothrow: true }) ??
       program.bin ??
       '/usr/local/bin/duplicacy';
-    const duplicacy = new Duplicacy(path);
+    const duplicacy = new Duplicacy(path, debug);
+
+    debug.log(`Path of duplicacy binary determined as: ${path}`);
 
     /**
      * Create the post-backup script and make it executable
@@ -65,6 +70,10 @@ lockfile.lock(
       `#!/bin/sh\n${path} prune -keep 0:${program.pruneDays ?? 1}`,
     );
     fs.chmodSync(`${program.repository}/.duplicacy/scripts/post-backup`, '755');
+
+    debug.log(
+      `Successfully created post-backup script at: ${program.repository}/.duplicacy/scripts/post-backup`,
+    );
 
     duplicacy.backup(
       program.repository,
@@ -82,6 +91,8 @@ lockfile.lock(
           if (err) {
             utils.error(err.message);
           }
+
+          debug.log('Successfully removed lock on lockfile');
         });
       },
     );
