@@ -16,14 +16,14 @@ program
     '-r, --repository <path>',
     'Path to the duplicacy repository you wish to back up',
   )
-  .option('-l, --log', 'Enable log-style output')
+  .option('-l, --log', 'Enable log-style output', true)
   .option(
     '--prune-days <number>',
     'Amount of days to keep backed up, snapshots falling outside the amount of days provided will be deleted',
   )
   .option('-t, --threads <number>', 'Number of uploading threads')
-  .option('-s, --stats', 'Show statistics during and after backup')
-  .option('--dry-run', "Dry run for testing, don't backup anything")
+  .option('-s, --stats', 'Show statistics during and after backup', true)
+  .option('--dry-run', "Dry run for testing, don't backup anything", false)
   .option('--wait <minutes>', 'Time in minutes to wait on lock to go away')
   .option(
     '--bin <path>',
@@ -78,10 +78,10 @@ lockfile.lock(
     duplicacy.backup(
       program.repository,
       {
-        log: program.log ?? true,
+        log: program.log,
         threads: program.threads ?? 2,
-        stats: program.stats ?? true,
-        ['dry-run']: program.dryRun ?? false,
+        stats: program.stats,
+        ['dry-run']: program.dryRun,
       },
       () => {
         /**
