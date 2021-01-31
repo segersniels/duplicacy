@@ -31,75 +31,82 @@ program
   )
   .option('--debug', 'Enable to output basic debugging statements')
   .option('--status', 'View the prune logs of the last run')
+  .option('--list', 'List snapshots')
   .parse(process.argv);
 
-if (!program.repository) {
-  utils.error('No repository path provided to --repository flag');
-}
+(() => {
+  if (!program.repository) {
+    utils.error('No repository path provided to --repository flag');
+  }
 
-const debug = new Debug(program.debug);
+  const debug = new Debug(program.debug);
 
-/**
- * Lock the file for 5 minutes
- */
-lockfile.lock(
-  `${program.repository}/.duplicacy/.lock`,
-  { wait: 1000 * 60 * (program.wait ?? 5) },
-  (err) => {
-    if (err) {
-      utils.error(err.message);
-    }
+  const path =
+    which.sync('duplicacy', { nothrow: true }) ??
+    program.bin ??
+    '/usr/local/bin/duplicacy';
+  const duplicacy = new Duplicacy(path, debug);
 
-    debug.log('Successfully acquired lock on lockfile');
+  if (program.status) {
+    return duplicacy.status(program.repository);
+  }
 
-    const path =
-      which.sync('duplicacy', { nothrow: true }) ??
-      program.bin ??
-      '/usr/local/bin/duplicacy';
-    const duplicacy = new Duplicacy(path, debug);
+  debug.log(`Path of duplicacy binary determined as: ${path}`);
 
-    if (program.status) {
-      return duplicacy.status(program.repository);
-    }
+  /**
+   * Create the post-backup script and make it executable
+   */
+  fs.mkdirSync(`${program.repository}/.duplicacy/scripts`, {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    `${program.repository}/.duplicacy/scripts/post-backup`,
+    `#!/bin/sh\n${path} prune -keep 0:${program.pruneDays ?? 1}`,
+  );
+  fs.chmodSync(`${program.repository}/.duplicacy/scripts/post-backup`, '755');
 
-    debug.log(`Path of duplicacy binary determined as: ${path}`);
+  debug.log(
+    `Successfully created post-backup script at: ${program.repository}/.duplicacy/scripts/post-backup`,
+  );
 
-    /**
-     * Create the post-backup script and make it executable
-     */
-    fs.mkdirSync(`${program.repository}/.duplicacy/scripts`, {
-      recursive: true,
-    });
-    fs.writeFileSync(
-      `${program.repository}/.duplicacy/scripts/post-backup`,
-      `#!/bin/sh\n${path} prune -keep 0:${program.pruneDays ?? 1}`,
-    );
-    fs.chmodSync(`${program.repository}/.duplicacy/scripts/post-backup`, '755');
+  if (program.list) {
+    return duplicacy.list(program.repository);
+  }
 
-    debug.log(
-      `Successfully created post-backup script at: ${program.repository}/.duplicacy/scripts/post-backup`,
-    );
+  /**
+   * Lock the file for 5 minutes
+   */
+  lockfile.lock(
+    `${program.repository}/.duplicacy/.lock`,
+    { wait: 1000 * 60 * (program.wait ?? 5) },
+    (err) => {
+      if (err) {
+        utils.error(err.message);
+      }
 
-    duplicacy.backup(
-      program.repository,
-      {
-        log: program.log,
-        threads: program.threads ?? 2,
-        stats: program.stats,
-        ['dry-run']: program.dryRun,
-      },
-      () => {
-        /**
-         * Unlock the file after backup has been completed
-         */
-        lockfile.unlock(`${program.repository}/.duplicacy/.lock`, (err) => {
-          if (err) {
-            utils.error(err.message);
-          }
+      debug.log('Successfully acquired lock on lockfile');
 
-          debug.log('Successfully removed lock on lockfile');
-        });
-      },
-    );
-  },
-);
+      duplicacy.backup(
+        program.repository,
+        {
+          log: program.log,
+          threads: program.threads ?? 2,
+          stats: program.stats,
+          ['dry-run']: program.dryRun,
+        },
+        () => {
+          /**
+           * Unlock the file after backup has been completed
+           */
+          lockfile.unlock(`${program.repository}/.duplicacy/.lock`, (err) => {
+            if (err) {
+              utils.error(err.message);
+            }
+
+            debug.log('Successfully removed lock on lockfile');
+          });
+        },
+      );
+    },
+  );
+})();

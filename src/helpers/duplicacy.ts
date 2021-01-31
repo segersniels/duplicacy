@@ -101,4 +101,19 @@ export default class Duplicacy {
 
     console.log(output);
   };
+
+  public list = (repository: string) => {
+    if (!this._path) {
+      console.error('[ERROR] Duplicacy is not installed');
+      process.exit();
+    }
+
+    const ls = spawn(this._path, ['list'], {
+      cwd: repository,
+    });
+
+    ls.stdout.on('data', function (data) {
+      console.log(data.toString());
+    });
+  };
 }
