@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import Debug from 'helpers/debug';
+import fs from 'fs';
 
 const GLOBAL_OPTIONS = ['log'];
 
@@ -84,5 +85,20 @@ export default class Duplicacy {
     });
 
     ls.on('close', fn);
+  };
+
+  public status = (repository: string) => {
+    const dir = `${repository}/.duplicacy/logs`;
+    const file = fs
+      .readdirSync(dir)
+      .filter((file) => fs.lstatSync(`${dir}/${file}`).isFile())
+      .map((file) => ({
+        file: `${dir}/${file}`,
+        mtime: fs.lstatSync(`${dir}/${file}`).mtime,
+      }))
+      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime())?.[0].file;
+    const output = fs.readFileSync(file).toString();
+
+    console.log(output);
   };
 }

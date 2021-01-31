@@ -30,6 +30,7 @@ program
     'If needed you can point to your duplicacy binary manually',
   )
   .option('--debug', 'Enable to output basic debugging statements')
+  .option('--status', 'View the prune logs of the last run')
   .parse(process.argv);
 
 if (!program.repository) {
@@ -56,6 +57,10 @@ lockfile.lock(
       program.bin ??
       '/usr/local/bin/duplicacy';
     const duplicacy = new Duplicacy(path, debug);
+
+    if (program.status) {
+      return duplicacy.status(program.repository);
+    }
 
     debug.log(`Path of duplicacy binary determined as: ${path}`);
 
